@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   cypress-run:
@@ -30,16 +31,33 @@ jobs:
       - name: Verify Cypress cache
         run: npx cypress verify
 
-      - name: Run Cypress tests in headless mode (Chrome)
+      - name: Clean previous Mochawesome reports
+        run: rm -rf cypress/reports/mochawesome || true
+
+      - name: Run Cypress tests in headless Chrome
+        id: cypress
         run: npx cypress run --browser chrome
 
       - name: Merge Mochawesome JSON reports
-        run: npx mochawesome-merge cypress/reports/mochawesome/*.json > cypress/reports/mochawesome/report.json
+        if: success()
+        run: |
+          if compgen -G "cypress/reports/mochawesome/*.json" > /dev/null; then
+            npx mochawesome-merge cypress/reports/mochawesome/*.json > cypress/reports/mochawesome/report.json
+          else
+            echo "⚠️ No JSON reports found to merge."
+          fi
 
-      - name: Generate HTML report
-        run: npx marge cypress/reports/mochawesome/report.json --reportDir cypress/reports/html --reportFilename index.html
+      - name: Generate HTML report from merged JSON
+        if: success()
+        run: |
+          if [ -f cypress/reports/mochawesome/report.json ]; then
+            npx marge cypress/reports/mochawesome/report.json --reportDir cypress/reports/html --reportFilename index.html
+          else
+            echo "⚠️ Merged JSON report not found, skipping HTML report generation."
+          fi
 
       - name: Upload HTML report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mochawesome-html-report
