@@ -11,7 +11,7 @@ Cypress.Commands.add("registerNewUser", () => {
   const homePage = new HomePage();
   const signupPage = new SignupPage();
 
-  const email = `Kareem_2002@example.com`;
+  const email = `Kareem_${Date.now()}@example.com`;
     const userData = {
     email: email,
     password: "Test1234",
@@ -198,7 +198,6 @@ Cypress.Commands.add("downloadInvoice", () => {
   cy.contains("Download Invoice").should("be.visible").click();
 });
 
-Cypress.Commands.add("verifyInvoiceDownloaded", () => {
-});
+Cypress.Commands.add("verifyInvoiceDownloaded", () => {});
 
 /*********************************************************************** */
